@@ -2,10 +2,11 @@
 give_answer(){
     if [ $1 == "Y" ]; then
         echo "Give me the values using the format you should"
+        echo "code,fullname,age,country,status,rescued" >> "$working_file"
         read values
          if [[ $values =~ ^[0-9]+,[^,]+,[0-9]+,[^,]+,(Passenger|Crew),(Yes|No)$ ]]; then
             echo "Values are correct"
-            echo "$values" >> "$working_dir"
+            echo "$values" >> "$working_file"
             echo "Wanna insert new line?(Y/n)"
             read answer
             give_answer $answer
