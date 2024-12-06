@@ -93,11 +93,15 @@ update_record_by_name() {
     echo "Record updated"
 }
 take_user_input() {
-    echo "Enter the search term (code, full name, or part of the name):"
-    read search_term
-    echo "Enter the new value (new full name, new record, or new name):"
-    read new_value
-
+    # echo "Enter the search term (code, full name, or part of the name):"
+    # read search_term
+    # echo "Enter the new value (new full name, new record, or new name):"
+    # read new_value
+    local search_term="$1";
+    shift
+    local new_value="$*";
+    echo "$search_term"
+    echo "$new_value"
     if [[ "$search_term" =~ ^[0-9]+$ ]] && [[ "$new_value" =~ ^[0-9]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+$ ]]; then
         echo "update_record_by_code"
         update_record_by_code "$search_term" "$new_value"
@@ -129,4 +133,4 @@ take_user_input() {
 # Main script execution
 fetch_csv_file
 change_delimiter
-take_user_input
+take_user_input "$@"  # takes multiple arguments
