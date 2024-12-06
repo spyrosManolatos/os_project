@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Function to fetch the CSV file
 fetch_csv_file() {
     echo "Give me the file path (please the path of the csv file)"
@@ -29,20 +27,6 @@ fetch_csv_file() {
 change_delimiter() {
     sed 's/;/,/g' "$working_file" > temp.csv && mv temp.csv "$working_file"
 }
-# Function to update a record by name
-update_record_by_name() {
-    full_name="$1"
-    new_record="$2"
-    awk -F, -v full_name="$full_name" -v new_record="$new_record" '
-    BEGIN {OFS=FS}
-    $2 == full_name {
-        print "Original line: " $0 > "/dev/stderr"
-        $0 = new_record
-    }
-    {print}
-    ' "$working_file" > temp.csv && mv temp.csv "$working_file"
-    echo "Record updated by name"
-}
 # Function to update a record by code
 update_record_by_code() {
     code="$1"
@@ -56,17 +40,6 @@ update_record_by_code() {
     {print}
     ' "$working_file" > temp.csv && mv temp.csv "$working_file"
     echo "Record updated by code"
-}
-
-add_new_record() {
-    new_record="$1"
-    if [[ "$new_record" =~ ^[0-9]+,[^,]+,[^,]+,[^,]+$ ]]; then
-        echo "$new_record" >> "$working_file"
-        echo "New record added"
-    else
-        echo "New record format is incorrect"
-        exit 1
-    fi
 }
 # Function to update full name by code and display the original line
 update_full_name_by_code() {
@@ -83,43 +56,28 @@ update_full_name_by_code() {
     echo "Full name updated by code"
 }
 
-# Function to update full name by full name and display the original line
-update_full_name_by_full_name() {
-    full_name="$1"
-    new_full_name="$2"
-    awk -F, -v full_name="$full_name" -v new_full_name="$new_full_name" '
-    BEGIN {OFS=FS}
-    $2 == full_name {
-        print "Original line: " $0 > "/dev/stderr"
-        $2 = new_full_name
-    }
-    {print}
-    ' "$working_file" > temp.csv && mv temp.csv "$working_file"
-    echo "Full name updated by full name"
-}
 
 # Function to take user input and determine the update method for records
 # Function to update only the first name or surname
-update_name() {
+update_first_name_or_surname() {
     search_term="$1"
-    new_name="$2"
-    awk -F, -v search_term="$search_term" -v new_name="$new_name" '
+    new_value="$2"
+    awk -F, -v search_term="$search_term" -v new_value="$new_value" '
     BEGIN {OFS=FS}
     $2 ~ search_term {
         print "Original line: " $0 > "/dev/stderr"
         split($2, names, " ")
         if (names[1] == search_term) {
-            names[1] = new_name
+            $2 = new_value
         } else if (names[2] == search_term) {
-            names[2] = new_name
+            $2 = new_value
         }
-        $2 = names[1] " " names[2]
+        
     }
     {print}
     ' "$working_file" > temp.csv && mv temp.csv "$working_file"
-    echo "Name updated"
+    echo "First name or surname updated"
 }
-
 update_record_by_name() {
     search_term="$1"
     new_record="$2"
@@ -155,17 +113,13 @@ take_user_input() {
         fi
         echo "update_record_by_name"
         update_record_by_name "$search_term" "$new_value"
-
-    # elif [[ "$search_term" =~ ^[^,]+(\ [^,]+)*$ ]]; then
-    #     echo "update_full_name_by_full_name"
-    #     update_full_name_by_full_name "$search_term" "$new_value"
     elif [[ "$search_term" =~ ^[^,]+$ ]]; then
         if [[ "$search_term" =~ ^[0-9]+$ || "$new_value" =~ ^[0-9]+ ]]; then
             echo "search term or new value should not be a number";
             exit;
         fi
         echo "update_name"
-        # update_name "$search_term" "$new_value"
+        update_first_name_or_surname "$search_term" "$new_value"
     else
         echo "Search term is not correct"
         exit 1
