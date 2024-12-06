@@ -1,1 +1,4 @@
-Kante kala commits gia na vlepete ti progress ehete kanei mehri ekeini ti stigmi (deite to diko mou arheio)
+Eho teleiosei shedon tin 1(mou menoun dyo erotima apo to teleftaio erotima kai na ta enoso)
+Parakalo poly na kanete kai ta dika sas giati ehoume kai 2o project opoy nanai
+efharisto
+spyros
