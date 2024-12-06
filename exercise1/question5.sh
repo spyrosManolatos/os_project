@@ -62,6 +62,7 @@ print_lines_for_age_group() {
         print "Ages 0-18:", count_0_18
         print "Ages 19-35:", count_19_35
         print "Ages 36-50:", count_36_50
+        print "Age >51:", count_51
         print "\n=== Age Group 0-18 ===\n" 
         for(i=0; i<count_0_18; i++) print group1[i]
         print "\nTotal in group 0-18:", count_0_18
@@ -80,6 +81,8 @@ print_lines_for_age_group() {
 
         print "\n=== Summary ==="
         print "Total passengers analyzed:", count_0_18 + count_19_35 + count_36_50 + count_51
+
+
     }
     ' "$working_file"
     } > ages.txt
@@ -87,6 +90,81 @@ print_lines_for_age_group() {
 
 }
 
+process_age_group_csvs(){
+    {
+        awk -F, '
+        BEGIN {
+            percentage_for_0_18 = 0
+            rescued_0_18 = 0
+            count_0_18 = 0
+            rescued_19_35 = 0
+            rescued_36_50 = 0
+            rescued_51 = 0
+        }
+        NR>1 {
+            if ($3 >= 0 && $3 <= 18) {
+                count_0_18++
+                if (toupper($6) ~ /^[[:space:]]*YES[[:space:]]*$/) {
+                    rescued_0_18++
+                }
+            }
+            else if ($3 > 18 && $3 <= 35) {
+                count_19_35++
+                if (toupper($6) ~ /^[[:space:]]*YES[[:space:]]*$/) {
+                    rescued_19_35++
+                }
+            }
+            else if ($3 >= 36 && $3 <= 50) {
+                count_36_50++
+                if (toupper($6) ~ /^[[:space:]]*YES[[:space:]]*$/) {
+                    rescued_36_50++
+                }
+            }
+            else if ($3 >= 51) {
+                count_51++
+                if (toupper($6) ~ /^[[:space:]]*YES[[:space:]]*$/) {
+                    rescued_51++
+                }
+            }
+            
+        }
+        END {
+            print "\nAge Group 0-18 Summary:"
+            print "------------------------"
+            print "Total passengers:", count_0_18
+            print "Rescued passengers:", rescued_0_18
+            if (count_0_18 > 0) {
+                percentage_for_0_18 = (rescued_0_18/count_0_18) * 100
+                printf "Rescue percentage: %.2f%%\n", percentage_for_0_18
+            }
+            print "\nAge Group 19-35 Summary:"
+            print "------------------------"
+            print "Total passengers:", count_19_35
+            print "Rescued passengers:", rescued_19_35
+            if (count_19_35 > 0) {
+                percentage_for_19_35 = (rescued_19_35/count_19_35) * 100
+                printf "Rescue percentage: %.2f%%\n", percentage_for_19_35
+            }
+            print "\nAge Group 36-50 Summary:"
+            print "------------------------"
+            print "Total passengers:", count_36_50
+            print "Rescued passengers:", rescued_36_50
+            if (count_36_50 > 0) {
+                percentage_for_36_50 = (rescued_36_50/count_36_50) * 100
+                printf "Rescue percentage: %.2f%%\n", percentage_for_36_50
+            }
+            print "\nAge Group >=51 Summary:"
+            print "------------------------"
+            print "Total passengers:", count_51
+            print "Rescued passengers:", rescued_51
+            if (count_51 > 0) {
+                percentage_for_51 = (rescued_51/count_51) * 100
+                printf "Rescue percentage: %.2f%%\n", percentage_for_51
+            }
+        }' "$working_file"
+    } > percentages.txt
+}
 fetch_csv_file
 change_delimiter
 print_lines_for_age_group
+process_age_group_csvs
