@@ -167,8 +167,58 @@ process_age_group_csvs(){
 filter_rescued(){
     grep -i "yes" "$working_file" > rescued.txt
 }
+calc_avg_age_per_passnger_catagory(){
+    {
+        awk -F, '
+        BEGIN {
+            total_age = 0
+            total_passengers = 0
+            total_children = 0
+            total_adults_for_19_35 = 0
+            total_adults_for_35_50 = 0
+            total_seniors = 0
+            total_age_for_children = 0
+            total_age_for_adults_for_19_35 = 0
+            total_age_for_adults_for_35_50 = 0
+            total_age_for_seniors = 0
+        }
+        NR>1 {
+            total_age += $3
+            total_passengers++
+            
+            if($5 ~ /^[[:space:]]*Passenger[[:space:]]*$/) {
+                total_rescued++
+                if ($3 >= 0 && $3 <= 18) {
+                    total_children++
+                    total_age_for_children += $3
+                }
+                if ($3 > 19 && $3 <= 35) {
+                    total_adults_for_19_35++
+                    total_age_for_adults_for_19_35 += $3
+                }
+                else if ($3 > 35 && $3 <= 50) {
+                    total_adults_for_35_50++
+                    total_age_for_adults_for_35_50 += $3
+                }
+                else if ($3 > 50) {
+                    total_seniors++
+                    total_age_for_seniors += $3
+                }
+            }
+            
+        }
+        END {
+            print "Average age of all passengers:", total_age/total_passengers
+            print "Average age of children (0-18):", total_age_for_children/total_children
+            print "Average age of adults (19-35):", total_age_for_adults_for_19_35/total_adults_for_19_35
+            print "Average age of adults (36-50):", total_age_for_adults_for_35_50/total_adults_for_35_50
+            print "Average age of seniors (51+):", total_age_for_seniors/total_seniors
+        }' "$working_file"
+    } > avg.txt
+}
 fetch_csv_file
 change_delimiter
 # print_lines_for_age_group
 # process_age_group_csvs
-filter_rescued
+# filter_rescued
+calc_avg_age_per_passnger_catagory
