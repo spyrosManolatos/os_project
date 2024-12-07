@@ -26,7 +26,6 @@ fetch_csv_file() {
 change_delimiter() {
     sed 's/;/,/g' "$working_file" > temp.csv && mv temp.csv "$working_file"
 }
-# Function to print entire lines for ages 1-18
 
 print_lines_for_age_group() {
     {
@@ -216,9 +215,12 @@ calc_avg_age_per_passnger_catagory(){
         }' "$working_file"
     } > avg.txt
 }
+generate_reports(){
+    print_lines_for_age_group
+    process_age_group_csvs
+    calc_avg_age_per_passnger_catagory
+    filter_rescued
+}
 fetch_csv_file
 change_delimiter
-# print_lines_for_age_group
-# process_age_group_csvs
-# filter_rescued
-calc_avg_age_per_passnger_catagory
+generate_reports
