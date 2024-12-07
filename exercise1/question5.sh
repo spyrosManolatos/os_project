@@ -164,7 +164,11 @@ process_age_group_csvs(){
         }' "$working_file"
     } > percentages.txt
 }
+filter_rescued(){
+    grep -i "yes" "$working_file" > rescued.txt
+}
 fetch_csv_file
 change_delimiter
-print_lines_for_age_group
-process_age_group_csvs
+# print_lines_for_age_group
+# process_age_group_csvs
+filter_rescued
