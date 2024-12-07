@@ -1,3 +1,4 @@
-
-working_file="passenger_data.csv"
-less $working_file
+display_file(){
+    less $1
+}
+display_file "passenger_data.csv";
