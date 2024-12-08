@@ -9,6 +9,7 @@ void* passenger_thread();
 // Semaphore declarations
 extern sem_t boat_space;
 extern sem_t passenger_queue;
+extern sem_t lifeboat_queue;
 extern pthread_mutex_t queue_lock;
 
 // Initialization function

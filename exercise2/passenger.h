@@ -2,19 +2,23 @@
 
 void* passenger_thread() {
   
-    printf("A passenger is waiting to board.\n");
-
-    // Wait to enter the queue
-    sem_wait(&passenger_queue);
-    printf("A passenger is in the queue.\n");
-
-    // Wait for space on the boat
+    sem_wait(&lifeboat_queue);
+    
+    printf("Passenger is waiting for a boat.\n");
+    
+    // Wait for available space on the boat (capacity control)
     sem_wait(&boat_space);
-    printf("A passenger is boarding the lifeboat.\n");
-
-    // Simulate boarding time
-    sleep(1);
-
-    printf("A passenger has boarded the lifeboat.\n");
+    
+    // Boarding process
+    printf("Passenger is boarding the boat.\n");
+    sleep(1);  // Simulate time for boarding
+    
+    // After boarding, free up one space on the boat
+    sem_post(&boat_space);
+    
+    // Finished boarding, so release the boat for others
+    printf("Passenger has boarded the boat.\n");
+    sem_post(&lifeboat_queue);
+    
     return NULL;
 }

@@ -1,8 +1,9 @@
 #include "passenger.h"
 
-
 sem_t boat_space;
 sem_t passenger_queue;
+sem_t lifeboat_queue;
+
 pthread_mutex_t queue_lock;
 
 void* lifeboat_thread() {
@@ -12,25 +13,24 @@ void* lifeboat_thread() {
 
 int main() {
     
-    int n_passengers;
-    int n_boats;
-    int capacity;
-
+   int n_passengers;
+   int n_boats;
+   int capacity;
+    
     printf("Enter the number of passengers in the ship:");
-    scanf("%d",&n_passengers);
+    scanf("%d", &n_passengers);
     printf("Enter the number of life boats:");
-    scanf("%d",&n_boats);
+    scanf("%d", &n_boats);
     printf("Enter the capacity of each life boat:");
-    scanf("%d",&capacity);
+    scanf("%d", &capacity);
 
-    printf("Initializing lifeboat simulation with %d passengers, %d boats and a boat capacity of %d...\n"
-    , n_passengers, n_boats,capacity);
+    printf("Initializing lifeboat simulation with %d passengers, %d boats and a boat capacity of %d...\n", n_passengers, n_boats, capacity);
 
     init_resources(capacity);
 
     // Signal passengers to start boarding
     for (int i = 0; i < n_passengers; i++) {
-        sem_post(&passenger_queue);
+        sem_post(&lifeboat_queue);  // Allow passengers to queue up for boats
     }
 
     printf("All passengers are queued for boarding.\n");
@@ -41,7 +41,7 @@ int main() {
     // Create passenger threads
     for (int i = 0; i < n_passengers; i++) {
         pthread_create(&passengers[i], NULL, passenger_thread, NULL);
-        sleep(1); // Simulate staggered arrival
+        sleep(1); // Simulate staggered arrival of passengers
     }
 
     // Create lifeboat threads
