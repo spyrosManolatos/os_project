@@ -1,4 +1,2 @@
-Teleiosa to 95% tis 1 mou menei mono na kano merge
-Parakalo poly na kanete kai ta dika sas giati ehoume kai 2o project opoy nanai
-efharisto
-spyros
+Otan teleiosete to meros sas grapste ena mikro report kai anevaste to sto corresponding folder
+tha ta mazepso gia na grapso kai to report
