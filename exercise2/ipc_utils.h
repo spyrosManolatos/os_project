@@ -1,27 +1,42 @@
+// ipc_utils.h: Helper utilities for semaphore management
+
+#ifndef IPC_UTILS_H
+#define IPC_UTILS_H
+
 #include <semaphore.h>
-#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 
-void* passenger_thread(); 
-
-// Semaphore declarations
-extern sem_t boat_space;
-extern sem_t passenger_queue;
-extern sem_t lifeboat_queue;
-extern pthread_mutex_t queue_lock;
-
-// Initialization function
-void init_resources(int boat_capacity) {
-    sem_init(&boat_space, 0, boat_capacity); // Semaphore for available seats on the lifeboat
-    sem_init(&passenger_queue, 0, 0);        // Semaphore for passengers in the queue
-    pthread_mutex_init(&queue_lock, NULL);   // Mutex for queue synchronization
+// Function to initialize a semaphore
+void semaphore_init(sem_t *sem, int value) {
+    if (sem_init(sem, 0, value) != 0) {
+        printf("Failed to initialize semaphore");
+        exit(1);
+    }
 }
 
-// Cleanup function
-void cleanup_resources() {
-    sem_destroy(&boat_space);
-    sem_destroy(&passenger_queue);
-    pthread_mutex_destroy(&queue_lock);
+// Function to wait (decrement) a semaphore
+ void semaphore_wait(sem_t *sem) {
+    if (sem_wait(sem) != 0) {
+        printf("Failed to wait on semaphore");
+        exit(1);
+    }
 }
+
+// Function to signal (increment) a semaphore
+void semaphore_signal(sem_t *sem) {
+    if (sem_post(sem) != 0) {
+        printf("Failed to signal semaphore");
+        exit(1);
+    }
+}
+
+// Function to destroy a semaphore
+ void semaphore_destroy(sem_t *sem) {
+    if (sem_destroy(sem) != 0) {
+        printf("Failed to destroy semaphore");
+        exit(1);
+    }
+}
+
+#endif // IPC_UTILS_H
