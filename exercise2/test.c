@@ -20,6 +20,7 @@ void passenger_process(int id) {
    
     semaphore_wait(&boats);       // Wait for available boat
     semaphore_wait(&boarding);    // Wait for permission to board
+    
     lpassengers = lpassengers + 1;
     semaphore_wait(&mutex);       // Start of critical section
     printf("Passenger %d boarded lifeboat %d\n", id, boat_id);
@@ -31,7 +32,7 @@ void passenger_process(int id) {
 }
 
 void lifeboat_process(int id) {
-    int lpassengers = 0;
+
     while (1) {
         printf("Lifeboat %d ready for boarding\n", id);
 
@@ -73,9 +74,9 @@ int main() {
     scanf("%d", &n_capacity);
 
     semaphore_init(&boats, n_lboats);  // Initialize with number of boats
-    semaphore_init(&capacity, 1);      // Start with no capacity signals
+    semaphore_init(&capacity, 1);      // Start with  capacity signal meaning empty boat
     semaphore_init(&mutex, 1);         // Binary semaphore for mutual exclusion
-    semaphore_init(&boarding, 0);      // Start with no boarding signals
+    semaphore_init(&boarding, 1);      // Start with  boarding signal meaning passenger is boarding
 
     // Create passenger processes
     for (int i = 0; i < n_passengers; i++) {

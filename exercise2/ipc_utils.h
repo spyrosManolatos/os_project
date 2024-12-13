@@ -1,42 +1,18 @@
-// ipc_utils.h: Helper utilities for semaphore management
-
-#ifndef IPC_UTILS_H
-#define IPC_UTILS_H
-
+// ipc_utils.h
 #include <semaphore.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <pthread.h>
 
-// Function to initialize a semaphore
-void semaphore_init(sem_t *sem, int value) {
-    if (sem_init(sem, 0, value) != 0) {
-        printf("Failed to initialize semaphore");
-        exit(1);
-    }
+// Semaphores
+sem_t boat_semaphore; // Limits the number of passengers per boat
+sem_t boarding_queue_semaphore; // Ensures orderly boarding
+
+// Utility functions
+void init_semaphores(int boat_capacity) {
+    sem_init(&boat_semaphore, 0, boat_capacity);
+    sem_init(&boarding_queue_semaphore, 0, 1); // Mutex-like semaphore
 }
 
-// Function to wait (decrement) a semaphore
- void semaphore_wait(sem_t *sem) {
-    if (sem_wait(sem) != 0) {
-        printf("Failed to wait on semaphore");
-        exit(1);
-    }
+void destroy_semaphores() {
+    sem_destroy(&boat_semaphore);
+    sem_destroy(&boarding_queue_semaphore);
 }
-
-// Function to signal (increment) a semaphore
-void semaphore_signal(sem_t *sem) {
-    if (sem_post(sem) != 0) {
-        printf("Failed to signal semaphore");
-        exit(1);
-    }
-}
-
-// Function to destroy a semaphore
- void semaphore_destroy(sem_t *sem) {
-    if (sem_destroy(sem) != 0) {
-        printf("Failed to destroy semaphore");
-        exit(1);
-    }
-}
-
-#endif // IPC_UTILS_H
