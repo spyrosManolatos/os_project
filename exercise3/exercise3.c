@@ -98,14 +98,84 @@ void print_memory() {
     }
 }
 
-// Round Robin simulation
-void simulate_round_robin() {
-
-    
+// Print the processes status
+void print_processes() {
+    printf("Processes Status:\n");
+    for (int i = 0; i < process_count; i++) {
+        printf("PID: %d, Arrival Time: %d, Duration: %d, Memory Needed: %d, Remaining Time: %d, In Memory: %s\n",
+               processes[i].pid, processes[i].arrival_time, processes[i].duration,
+               processes[i].memory_needed, processes[i].remaining_time,
+               processes[i].in_memory ? "Yes" : "No");
+    }
 }
 
-// Main
-int main(){
+// Round Robin simulation
+void simulate_round_robin() {
+    int current_time = 0;
+    int current_process = 0;
+    int time_quantum = TIME_QUANTUM;
 
-    
+    while (true) {
+        // Check for new processes
+        for (int i = 0; i < process_count; i++) {
+            if (processes[i].arrival_time == current_time) {
+                printf("Process %d arrived\n", processes[i].pid);
+                processes[i].in_memory = true;
+                processes[i].remaining_time = processes[i].duration;
+                int start = allocate_memory(processes[i].pid, processes[i].memory_needed);
+                if (start == -1) {
+                    printf("Memory allocation failed for process %d\n", processes[i].pid);
+                    processes[i].in_memory = false;
+                }
+            }
+        }
+
+        // Execution of current process
+        if (processes[current_process].in_memory) {
+            printf("Process %d is executing\n", processes[current_process].pid);
+            processes[current_process].remaining_time -= time_quantum;
+            if (processes[current_process].remaining_time <= 0) {
+                printf("Process %d completed\n", processes[current_process].pid);
+                free_memory(processes[current_process].pid);
+                processes[current_process].in_memory = false;
+            }
+        }
+
+        // Next process
+        current_process = (current_process + 1) % process_count;
+        current_time += time_quantum;
+
+        // Check termination
+        bool all_terminated = true;
+        for (int i = 0; i < process_count; i++) {
+            if (processes[i].remaining_time > 0) {
+                all_terminated = false;
+                break;
+            }
+        }
+        if (all_terminated) {
+            print_processes();
+            break;
+        }
+    }
+}
+
+int main() {
+    initialize_memory();
+
+    printf("Enter number of processes: ");
+    scanf("%d", &process_count);
+
+    for (int i = 0; i < process_count; i++) {
+        printf("Enter details for process %d (arrival_time, duration, memory_needed): ", i);
+        processes[i].pid = i;
+        scanf("%d %d %d", &processes[i].arrival_time, &processes[i].duration, &processes[i].memory_needed);
+        processes[i].remaining_time = processes[i].duration;
+        processes[i].in_memory = false;
+    }
+
+    simulate_round_robin();
+    print_memory();
+
+    return 0;
 }
