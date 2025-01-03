@@ -1,0 +1,3 @@
+../excecutables/print_1_1000 1
+../excecutables/print_1001_2000 4
+../excecutables/dummy 1
