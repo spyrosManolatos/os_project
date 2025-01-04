@@ -9,12 +9,12 @@ PROJECT OS PART 2 HOW-TO
 
 παράδειγμα:
 (είμαστε στο workpath folder) 
-pumpkineater69@cheguevara:~/documents/ceid_os_part2/excecutables$ gcc -o print_1_1000 print_1_1000.c
-pumpkineater69@cheguevara:~/documents/ceid_os_part2/excecutables$ gcc -o print_1001_2000 print_1001_2000.c
-pumpkineater69@cheguevara:~/documents/ceid_os_part2/excecutables$ gcc -o dummy dummy_stuff.c
+1) pumpkineater69@cheguevara:~/documents/ceid_os_part2/excecutables$ gcc -o print_1_1000 print_1_1000.c
+2) pumpkineater69@cheguevara:~/documents/ceid_os_part2/excecutables$ gcc -o print_1001_2000 print_1001_2000.c
+3) pumpkineater69@cheguevara:~/documents/ceid_os_part2/excecutables$ gcc -o dummy dummy_stuff.c
 (μετά στο άλλον folder στα scripts)
-pumpkineater69@cheguevara:~/documents/ceid_os_part2/source_script$ gcc -o multicore_scheduler multicore_scheduler.c
-pumpkineater69@cheguevara:~/documents/ceid_os_part2/source_script$ ./multicore_scheduler 3 RRFF 10  order_of_exec.txt
+4) pumpkineater69@cheguevara:~/documents/ceid_os_part2/source_script$ gcc -o multicore_scheduler multicore_scheduler.c
+5) pumpkineater69@cheguevara:~/documents/ceid_os_part2/source_script$ ./multicore_scheduler 3 RRFF 10  order_of_exec.txt
 
 ** ΜΗΝ ΑΛΛΑΞΕΤΕ ΤΟ ORDER_OF_EXEC **
 Ευχαριστώ, Σπύρος
