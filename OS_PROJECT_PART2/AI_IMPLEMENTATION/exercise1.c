@@ -16,6 +16,8 @@
 #define MAX_CORES 4
 
 void rr(int core_id);
+void rraff(int core_id);
+void fcfs(int core_id);
 
 #define PROC_NEW    0
 #define PROC_STOPPED    1
@@ -28,6 +30,7 @@ typedef struct proc_desc {
     int pid;
     int status;
     int requested_cores;
+    int first_core;
     double t_submission, t_start, t_end;
 } proc_t;
 
@@ -38,6 +41,7 @@ struct single_queue {
 };
 
 struct single_queue global_q;
+struct single_queue local_q[MAX_CORES];
 
 #define proc_queue_empty(q) ((q)->first==NULL)
 
@@ -45,6 +49,27 @@ void proc_queue_init (register struct single_queue * q)
 {
     q->first = q->last = NULL;
     q->members = 0;
+}
+
+void core_queues_init()
+{
+    for (int i = 0; i < MAX_CORES; i++) {
+        local_q[i].first = NULL;
+        local_q[i].last = NULL;
+    }
+}
+
+void enqueue_local_queue(int core_id, proc_t *proc)
+{
+    if (local_q[core_id].first == NULL) {
+        local_q[core_id].first = proc;
+        local_q[core_id].last = proc;
+    } 
+    else {
+        local_q[core_id].last->next = proc;
+        local_q[core_id].last = proc;
+    }
+    proc->next = NULL;
 }
 
 void proc_to_rq (register proc_t *proc)
@@ -82,6 +107,25 @@ proc_t *proc_rq_dequeue ()
     return proc;
 }
 
+proc_t *proc_rq_dequeue_m(int core_id) {
+    register proc_t *proc;
+
+    proc = global_q.first;
+    if (proc == NULL) return NULL;
+
+    global_q.first = proc->next;
+    if (global_q.first == NULL) {
+        global_q.last = NULL;
+    }
+    proc->next = NULL;
+
+    // For new processes, assign to this core
+    if (proc->status == PROC_NEW) {
+        proc->first_core = core_id;
+    }
+    
+    return proc;
+}
 
 void print_queue()
 {
@@ -102,8 +146,10 @@ double proc_gettime()
     return (double) (tv.tv_sec+tv.tv_usec/1000000.0);
 }
 
-#define RR        1
+#define RR      1
 #define FCFS    2
+#define RRAFF  3
+
 int policy;
 int quantum = 100;    /* ms */
 proc_t *running_proc[MAX_CORES];
@@ -125,6 +171,9 @@ void *core_scheduler(void *arg)
             break;
         case FCFS:
             fcfs(core_id);
+            break;
+        case RRAFF:
+            rraff(core_id);
             break;
         default:
             err_exit("Unimplemented policy");
@@ -161,7 +210,14 @@ int main(int argc, char **argv)
         input = fopen(argv[3], "r");
         printf("Policy: FCFS\n");
         if (input == NULL) err_exit("invalid input file name");
-    } else {
+    } else if(!strcmp(argv[2], "RRAFF")) {
+        policy = RRAFF;
+        quantum = atoi(argv[3]);
+        input = fopen(argv[4], "r");
+        printf("Policy: RRAFF with quantum:%d\n", quantum);
+        if (input == NULL) err_exit("invalid input file name");
+    }
+    else {
         err_exit("invalid usage");
     }
 
@@ -242,6 +298,70 @@ void rr(int core_id)
     sigaction(SIGCHLD, &sig_act, NULL);
 
     while ((proc = proc_rq_dequeue()) != NULL) {
+        printf("Core %d: Dequeue process with name %s and pid %d\n", core_id, proc->name, proc->pid);
+        if (proc->status == PROC_NEW) {
+            proc->t_start = proc_gettime();
+            pid = fork();
+            if (pid == -1) {
+                err_exit("fork failed!");
+            }
+            if (pid == 0) {
+                printf("Core %d: executing %s\n", core_id, proc->name);
+                execl(proc->name, proc->name, NULL);
+            } else {
+                proc->pid = pid;
+                running_proc[core_id] = proc;
+                proc->status = PROC_RUNNING;
+
+                nanosleep(&req, &rem);
+                if (proc->status == PROC_RUNNING) {
+                    kill(proc->pid, SIGSTOP);
+                    proc->status = PROC_STOPPED;
+                    proc_to_rq_end(proc);
+                }
+            }
+        } else if (proc->status == PROC_STOPPED) {
+            proc->status = PROC_RUNNING;
+            running_proc[core_id] = proc;
+            kill(proc->pid, SIGCONT);
+
+            nanosleep(&req, &rem);
+            if (proc->status == PROC_RUNNING) {
+                kill(proc->pid, SIGSTOP);
+                proc_to_rq_end(proc);
+                proc->status = PROC_STOPPED;
+            }
+        } else if (proc->status == PROC_EXITED) {
+            printf("Core %d: process has exited\n", core_id);
+        } else if (proc->status == PROC_RUNNING) {
+            printf("Core %d: WARNING: Already running process\n", core_id);
+        } else {
+            err_exit("Unknown process status");
+        }
+    }
+}
+
+void rraff(int core_id) {
+
+    printf("Quantum: %d\n", quantum);
+    struct sigaction sig_act;
+    proc_t *proc;
+    int pid;
+    struct timespec req, rem;
+
+    req.tv_sec = quantum / 1000;
+    req.tv_nsec = (quantum % 1000) * 1000000;
+
+    printf("Core %d: tv_sec = %ld\n", core_id, req.tv_sec);
+    printf("Core %d: tv_nsec = %ld\n", core_id, req.tv_nsec);
+
+    sigemptyset(&sig_act.sa_mask);
+    sig_act.sa_handler = 0;
+    sig_act.sa_flags = SA_SIGINFO | SA_NOCLDSTOP;
+    sig_act.sa_sigaction = sigchld_handler;
+    sigaction(SIGCHLD, &sig_act, NULL);
+
+    while ((proc = proc_rq_dequeue_m(core_id)) != NULL) {
         printf("Core %d: Dequeue process with name %s and pid %d\n", core_id, proc->name, proc->pid);
         if (proc->status == PROC_NEW) {
             proc->t_start = proc_gettime();
