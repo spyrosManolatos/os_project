@@ -6,3 +6,15 @@ PROJECT OS PART 2 HOW-TO
 1) κάνουμε compile με .o τα αρχεία των διαδικασιών ΟΠΩΣ τα βλέπουμε στο τελυταίο μέρος (μετά το /)
 2) gcc -o test <όνομα αρχείου κώδικα από το AI IMPLEMENETATION>
 3) ./test <αριθμός πυρήνων> <πολιτική <κβάντο αν θέλει> order_of_exec.txt 
+
+παράδειγμα:
+(είμαστε στο workpath folder) 
+pumpkineater69@cheguevara:~/documents/ceid_os_part2/excecutables$ gcc -o print_1_1000 print_1_1000.c
+pumpkineater69@cheguevara:~/documents/ceid_os_part2/excecutables$ gcc -o print_1001_2000 print_1001_2000.c
+pumpkineater69@cheguevara:~/documents/ceid_os_part2/excecutables$ gcc -o dummy dummy_stuff.c
+(μετά στο άλλον folder στα scripts)
+pumpkineater69@cheguevara:~/documents/ceid_os_part2/source_script$ gcc -o multicore_scheduler multicore_scheduler.c
+pumpkineater69@cheguevara:~/documents/ceid_os_part2/source_script$ ./multicore_scheduler 3 RRFF 10  order_of_exec.txt
+
+** ΜΗΝ ΑΛΛΑΞΕΤΕ ΤΟ ORDER_OF_EXEC **
+Ευχαριστώ, Σπύρος
