@@ -11,11 +11,7 @@ PROJECT OS PART 2 HOW-TO
 (είμαστε στο excecutables folder) 
 1) pumpkineater69@cheguevara:~/documents/ceid_os_part2/excecutables$ gcc -o print_1_1000 print_1_1000.c
 2) pumpkineater69@cheguevara:~/documents/ceid_os_part2/excecutables$ gcc -o print_1001_2000 print_1001_2000.c
-3) pumpkineater69@cheguevara:~/documents/ceid_os_part2/excecutables$ gcc -o dummy dummy_stuff.c
-
-
-
-(μετά στα scripts)
+3) pumpkineater69@cheguevara:~/documents/ceid_os_part2/excecutables$ gcc -o dummy dummy_stuff.c //αλλάζουμε τώρα πάμε στα scripts
 4) pumpkineater69@cheguevara:~/documents/ceid_os_part2/source_script$ gcc -o multicore_scheduler multicore_scheduler.c
 5) pumpkineater69@cheguevara:~/documents/ceid_os_part2/source_script$ ./multicore_scheduler 3 RRFF 10  order_of_exec.txt
 
