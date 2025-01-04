@@ -8,11 +8,14 @@ PROJECT OS PART 2 HOW-TO
 3) ./test <αριθμός πυρήνων> <πολιτική <κβάντο αν θέλει> order_of_exec.txt 
 
 παράδειγμα:
-(είμαστε στο workpath folder) 
+(είμαστε στο excecutables folder) 
 1) pumpkineater69@cheguevara:~/documents/ceid_os_part2/excecutables$ gcc -o print_1_1000 print_1_1000.c
 2) pumpkineater69@cheguevara:~/documents/ceid_os_part2/excecutables$ gcc -o print_1001_2000 print_1001_2000.c
 3) pumpkineater69@cheguevara:~/documents/ceid_os_part2/excecutables$ gcc -o dummy dummy_stuff.c
-(μετά στο άλλον folder στα scripts)
+
+
+
+(μετά στα scripts)
 4) pumpkineater69@cheguevara:~/documents/ceid_os_part2/source_script$ gcc -o multicore_scheduler multicore_scheduler.c
 5) pumpkineater69@cheguevara:~/documents/ceid_os_part2/source_script$ ./multicore_scheduler 3 RRFF 10  order_of_exec.txt
 
