@@ -16,7 +16,7 @@
 #define MAX_CORES 4
 
 void rr(int core_id);
-void rraff(int core_id);
+void rr_aff(int core_id);
 void fcfs(int core_id);
 
 #define PROC_NEW    0
@@ -59,19 +59,6 @@ void core_queues_init()
     }
 }
 
-void enqueue_local_queue(int core_id, proc_t *proc)
-{
-    if (local_q[core_id].first == NULL) {
-        local_q[core_id].first = proc;
-        local_q[core_id].last = proc;
-    } 
-    else {
-        local_q[core_id].last->next = proc;
-        local_q[core_id].last = proc;
-    }
-    proc->next = NULL;
-}
-
 void proc_to_rq (register proc_t *proc)
 {
     if (proc_queue_empty (&global_q))
@@ -104,26 +91,6 @@ proc_t *proc_rq_dequeue ()
         proc->next = NULL;
     }
 
-    return proc;
-}
-
-proc_t *proc_rq_dequeue_m(int core_id) {
-    register proc_t *proc;
-
-    proc = global_q.first;
-    if (proc == NULL) return NULL;
-
-    global_q.first = proc->next;
-    if (global_q.first == NULL) {
-        global_q.last = NULL;
-    }
-    proc->next = NULL;
-
-    // For new processes, assign to this core
-    if (proc->status == PROC_NEW) {
-        proc->first_core = core_id;
-    }
-    
     return proc;
 }
 
@@ -173,7 +140,7 @@ void *core_scheduler(void *arg)
             fcfs(core_id);
             break;
         case RRAFF:
-            rraff(core_id);
+            rr_aff(core_id);
             break;
         default:
             err_exit("Unimplemented policy");
@@ -341,69 +308,107 @@ void rr(int core_id)
     }
 }
 
-void rraff(int core_id) {
-
-    printf("Quantum: %d\n", quantum);
+void rr_aff(int core_id) {
     struct sigaction sig_act;
     proc_t *proc;
     int pid;
     struct timespec req, rem;
 
+    // Setup quantum time
     req.tv_sec = quantum / 1000;
     req.tv_nsec = (quantum % 1000) * 1000000;
 
-    printf("Core %d: tv_sec = %ld\n", core_id, req.tv_sec);
-    printf("Core %d: tv_nsec = %ld\n", core_id, req.tv_nsec);
+    printf("Core %d: RR-AFF scheduler starting (quantum = %d ms)\n", core_id, quantum);
 
+    // Setup signal handler
     sigemptyset(&sig_act.sa_mask);
     sig_act.sa_handler = 0;
     sig_act.sa_flags = SA_SIGINFO | SA_NOCLDSTOP;
     sig_act.sa_sigaction = sigchld_handler;
     sigaction(SIGCHLD, &sig_act, NULL);
 
-    while ((proc = proc_rq_dequeue_m(core_id)) != NULL) {
-        printf("Core %d: Dequeue process with name %s and pid %d\n", core_id, proc->name, proc->pid);
+    while (1) {
+        // Check if the local queue is empty and fetch a process from the global queue if available
+        if (local_q[core_id].first == NULL) {
+            proc = proc_rq_dequeue();
+            if (proc != NULL) {
+                // Add to local queue
+                if (local_q[core_id].last == NULL) {
+                    local_q[core_id].first = local_q[core_id].last = proc;
+                } else {
+                    local_q[core_id].last->next = proc;
+                    local_q[core_id].last = proc;
+                }
+                proc->next = NULL;
+            } else {
+                // If all queues are empty, exit the scheduler
+                int all_empty = 1;
+                for (int i = 0; i < MAX_CORES; i++) {
+                    if (local_q[i].first != NULL) {
+                        all_empty = 0;
+                        break;
+                    }
+                }
+                if (all_empty) break;
+                continue;
+            }
+        }
+
+        // Fetch the first process from the local queue
+        proc = local_q[core_id].first;
+        if (proc == NULL) continue;
+
+        // Remove the process from the local queue
+        local_q[core_id].first = proc->next;
+        if (local_q[core_id].first == NULL) {
+            local_q[core_id].last = NULL;
+        }
+
         if (proc->status == PROC_NEW) {
             proc->t_start = proc_gettime();
+            proc->first_core = core_id;
             pid = fork();
+            
             if (pid == -1) {
                 err_exit("fork failed!");
             }
+            
             if (pid == 0) {
-                printf("Core %d: executing %s\n", core_id, proc->name);
+                printf("Core %d: Executing %s\n", core_id, proc->name);
                 execl(proc->name, proc->name, NULL);
-            } else {
-                proc->pid = pid;
-                running_proc[core_id] = proc;
-                proc->status = PROC_RUNNING;
-
-                nanosleep(&req, &rem);
-                if (proc->status == PROC_RUNNING) {
-                    kill(proc->pid, SIGSTOP);
-                    proc->status = PROC_STOPPED;
-                    proc_to_rq_end(proc);
-                }
+                exit(1);
             }
-        } else if (proc->status == PROC_STOPPED) {
+            
+            proc->pid = pid;
             proc->status = PROC_RUNNING;
-            running_proc[core_id] = proc;
+        } else if (proc->status == PROC_STOPPED) {
+            printf("Core %d: Resuming %s\n", core_id, proc->name);
             kill(proc->pid, SIGCONT);
+            proc->status = PROC_RUNNING;
+        }
 
-            nanosleep(&req, &rem);
-            if (proc->status == PROC_RUNNING) {
-                kill(proc->pid, SIGSTOP);
-                proc_to_rq_end(proc);
-                proc->status = PROC_STOPPED;
+        running_proc[core_id] = proc;
+        nanosleep(&req, &rem);
+
+        // Handle quantum expiration
+        if (proc->status == PROC_RUNNING) {
+            printf("Core %d: Stopping %s\n", core_id, proc->name);
+            kill(proc->pid, SIGSTOP);
+            proc->status = PROC_STOPPED;
+
+            // Add the process back to the end of the local queue
+            if (local_q[core_id].last == NULL) {
+                local_q[core_id].first = local_q[core_id].last = proc;
+            } else {
+                local_q[core_id].last->next = proc;
+                local_q[core_id].last = proc;
             }
-        } else if (proc->status == PROC_EXITED) {
-            printf("Core %d: process has exited\n", core_id);
-        } else if (proc->status == PROC_RUNNING) {
-            printf("Core %d: WARNING: Already running process\n", core_id);
-        } else {
-            err_exit("Unknown process status");
+            proc->next = NULL;
         }
     }
 }
+
+
 void fcfs(int core_id){
     quantum = INT_MAX;
     rr(core_id);
