@@ -118,9 +118,10 @@ update_full_name_by_code() {
     new_full_name="$2"
     awk -F, -v code="$code" -v full_name="$new_full_name" '
     BEGIN {OFS=FS}
-    $1 == code {
+    $1 == code && !found {
         print "Original line: " $0 > "/dev/stderr"
         $2 = full_name
+        found = 1
     }
     {print} 
     ' "$working_file" > temp.csv && mv temp.csv "$working_file"
@@ -133,18 +134,16 @@ update_first_name_or_surname() {
     search_term="$1"
     new_value="$2"
     awk -F, -v search_term="$search_term" -v new_value="$new_value" '
-    BEGIN {OFS=FS}
-    $2 ~ search_term {
+    BEGIN {OFS=FS; updated=0}
+    $2 ~ search_term && !updated {
         print "Original line: " $0 > "/dev/stderr"
         split($2, names, " ")
-        if (names[1] == search_term) {
+        if (names[1] == search_term || names[2] == search_term) {
             $2 = new_value
-        } else if (names[2] == search_term) {
-            $2 = new_value
+            updated=1
         }
-        
     }
-    {print}
+    {print} 
     ' "$working_file" > temp.csv && mv temp.csv "$working_file"
     echo "First name or surname updated"
 }

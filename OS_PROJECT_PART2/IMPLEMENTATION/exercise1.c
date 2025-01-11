@@ -118,7 +118,7 @@ double proc_gettime()
 #define RRAFF  3
 
 int policy;
-int quantum = 100;    /* ms */
+int quantum;
 proc_t *running_proc[MAX_CORES];
 double global_t;
 int num_cores;
@@ -188,9 +188,7 @@ int main(int argc, char **argv)
         err_exit("invalid usage");
     }
 
-    /* Read input file */
     while (fgets(exec, sizeof(exec), input) != NULL) {
-        // Remove newline character if present
         exec[strcspn(exec, "\n")] = 0;
         if (strlen(exec) == 0) {
             continue;
@@ -201,7 +199,8 @@ int main(int argc, char **argv)
         char *token = strtok(exec, " ");
         strcpy(proc->name, token);
         token = strtok(NULL, " ");
-        proc->requested_cores = token ? atoi(token) : 1;
+        proc->requested_cores = 1;
+        
         proc->pid = -1;
         proc->status = PROC_NEW;
         proc->t_submission = proc_gettime();
@@ -246,7 +245,6 @@ void sigchld_handler(int signo, siginfo_t *info, void *context)
 
 void rr(int core_id)
 {
-    printf("Quantum: %d\n", quantum);
     struct sigaction sig_act;
     proc_t *proc;
     int pid;
