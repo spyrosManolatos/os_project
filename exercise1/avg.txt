@@ -1,0 +1,10 @@
+Average age for passengers
+Children (0-18): 14.0769
+Adults (19-35): 27.4837
+Adults (36-50): 43.1008
+Seniors (51+): 67.7047
+Average age for crew
+Children (0-18): 13.2857
+Adults (19-35): 27.6538
+Adults (36-50): 43.0455
+Seniors (51+): 66.9623

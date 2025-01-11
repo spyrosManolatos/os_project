@@ -229,10 +229,6 @@ print_lines_for_age_group() {
         }
     }
     END {
-        print "Ages 0-18:", count_0_18
-        print "Ages 19-35:", count_19_35
-        print "Ages 36-50:", count_36_50
-        print "Age >51:", count_51
         print "\n=== Age Group 0-18 ===\n" 
         for(i=0; i<count_0_18; i++) print group1[i]
         
@@ -256,7 +252,6 @@ print_lines_for_age_group() {
     }
     ' "$working_file"
     } > ages.txt
-    sed -i '/^$/N;/^\n$/D' ages.txt
 
 }
 

@@ -1,0 +1,12 @@
+Rescued Report
+Age Group 0-18 for passengers: 114 out of 130 ( 87.6923 %)
+Age Group 19-35 for passengers: 224 out of 261 ( 85.8238 %)
+Age Group 36-50 for passengers: 209 out of 238 ( 87.8151 %)
+Age Group 51+ for passengers: 462 out of 535 ( 86.3551 %)
+Age Group 0-18 for crew: 8 out of 14 ( 57.1429 %)
+Age Group 19-35 for crew: 13 out of 27 ( 48.1481 %)
+Age Group 36-50 for crew: 8 out of 22 ( 36.3636 %)
+Age Group 51+ for crew: 22 out of 53 ( 41.5094 %)
+Total rescued passengers: 1009
+Total rescued crew: 51
+Total rescued: 1060
