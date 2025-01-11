@@ -107,6 +107,7 @@ update_record_by_code() {
     $1 == code {
         print "Original line: " $0 > "/dev/stderr"
         $0 = new_record
+        print "New line: " $0 > "/dev/stderr"
     }
     {print}
     ' "$working_file" > temp.csv && mv temp.csv "$working_file"
@@ -121,14 +122,13 @@ update_full_name_by_code() {
     $1 == code && !found {
         print "Original line: " $0 > "/dev/stderr"
         $2 = full_name
+        print "New line: " $0 > "/dev/stderr"
         found = 1
     }
     {print} 
     ' "$working_file" > temp.csv && mv temp.csv "$working_file"
 }
 
-
-# Function to take user input and determine the update method for records
 # Function to update only the first name or surname
 update_first_name_or_surname() {
     search_term="$1"
@@ -138,10 +138,11 @@ update_first_name_or_surname() {
     $2 ~ search_term && !updated {
         print "Original line: " $0 > "/dev/stderr"
         split($2, names, " ")
-        if (names[1] == search_term || names[2] == search_term) {
+        if (names[1] == search_term || names[2] == search_term || names[3] == search_term) {
             $2 = new_value
             updated=1
         }
+        print "New line: " $0 > "/dev/stderr"
     }
     {print} 
     ' "$working_file" > temp.csv && mv temp.csv "$working_file"
@@ -156,6 +157,7 @@ update_record_by_name() {
         print "Original line: " $0 > "/dev/stderr"
         $0 = new_record
         found = 1
+        print "New line: " $0 > "/dev/stderr"
     }
     {print} 
     ' "$working_file" > temp.csv && mv temp.csv "$working_file"
