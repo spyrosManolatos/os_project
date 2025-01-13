@@ -4,7 +4,7 @@ LDFLAGS = -lm
 
 TARGET = exercise1
 MAIN_SRC = exercise1.c
-TEST_SRC = dummy_stuff.c print_1_1000.c print_1001_2000.c # delay file?
+TEST_SRC = dummy_stuff.c print_1_1000.c print_1001_2000.c exercise2.c # delay file?
 EXEC = $(TEST_SRC:.c=)
 
 all: $(TARGET) $(EXEC)

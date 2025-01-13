@@ -201,35 +201,13 @@ int main(int argc, char **argv)
     printf("scheduler exits\n");
     return 0;
 }
-void sigchld_handler(int signo, siginfo_t *info, void *context)
-{
-    printf("child %d exited\n", info->si_pid);
-    for (int i = 0; i < num_cores; i++) {
-        if (running_proc[i] != NULL && running_proc[i]->pid == info->si_pid) {
-            running_proc[i]->status = PROC_EXITED;
-            proc_t *proc = running_proc[i];
-            proc->t_end = proc_gettime();
-            printf("PID %d - CMD: %s\n", proc->pid, proc->name);
-            printf("\tElapsed time = %.2lf secs\n", proc->t_end-proc->t_submission);
-            printf("\tExecution time = %.2lf secs\n", proc->t_end-proc->t_start);
-            printf("\tWorkload time = %.2lf secs\n", proc->t_end-global_t);
-            running_proc[i] = NULL;
-            break;
-        }
-    }
-}
 
 void fcfs(int core_id)
 {
     struct sigaction sig_act;
     proc_t *proc;
     int pid;
-
-    sigemptyset(&sig_act.sa_mask);
-    sig_act.sa_handler = 0;
-    sig_act.sa_flags = SA_SIGINFO | SA_NOCLDSTOP;
-    sig_act.sa_sigaction = sigchld_handler;
-    sigaction(SIGCHLD, &sig_act, NULL);
+    int status;
 
     while ((proc = proc_rq_dequeue())!=NULL) {
 
@@ -238,7 +216,6 @@ void fcfs(int core_id)
         // Ανάθεση πυρήνων στη διεργασία
         if (!assign_cores(proc)) {
             printf("Core %d: Not enough cores available for process %s\n", core_id, proc->name);
-            printf("I am going to the end of the queue till the cores are available\n");
             proc->status = PROC_STOPPED;
             proc_to_rq_end(proc);
             print_queue();
@@ -269,13 +246,17 @@ void fcfs(int core_id)
             } else {
                 proc->pid = pid;
                 proc->status = PROC_RUNNING;
-
-                // Αναμονή μέχρι να ολοκληρωθεί η διεργασία
-                while (proc->status == PROC_RUNNING) {
-                    pause();
-                }
-
-                // Απελευθέρωση των πυρήνων μετά την ολοκλήρωση της διεργασίας
+                pid =waitpid(proc->pid, &status, 0);
+                proc->t_end = proc_gettime();
+                proc->status = PROC_EXITED;
+                if (pid < 0) err_exit("waitpid failed");
+				
+                printf("Finished process %s at time %.2lf\n", proc->name,proc->t_end);
+				printf("PID %d - CMD: %s\n", pid, proc->name);
+				printf("\tElapsed time = %.2lf secs\n", proc->t_end-proc->t_submission);
+				printf("\tExecution time = %.2lf secs\n", proc->t_end-proc->t_start);
+				printf("\tWorkload time = %.2lf secs\n", proc->t_end-global_t);
+                // free cores for the next process
                 for (int i = 0; i < proc->requested_cores; i++) {
                     running_proc[proc->assigned_cores[i]] = NULL;
                 }
@@ -307,7 +288,7 @@ int assign_cores(proc_t *proc)
 
     if (allocated_cores < proc->requested_cores) {
         printf("Not enough cores available for process %s\n", proc->name);
-        return 0; // Δεν υπάρχουν αρκετοί διαθέσιμοι πυρήνες
+        return 0; // it can not go yet
     }
 
     // Ανάθεση των πυρήνων στη διεργασία
@@ -317,5 +298,5 @@ int assign_cores(proc_t *proc)
         printf("Assigned core %d to process %s\n", core_indices[i], proc->name);
     }
 
-    return 1; // Επιτυχής ανάθεση
+    return 1; 
 }
