@@ -1,3 +1,4 @@
+
 #define _POSIX_C_SOURCE 200809L
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,7 +14,7 @@
 #include <limits.h>
 
 #define MAX_LINE_LENGTH 80
-#define MAX_CORES 4
+#define MAX_CORES 5
 
 void fcfs(int core_id);
 
@@ -52,9 +53,12 @@ void proc_queue_init (register struct single_queue * q)
 
 void proc_to_rq (register proc_t *proc)
 {
-    if (proc_queue_empty (&global_q))
+    if (proc_queue_empty (&global_q)) {
         global_q.last = proc;
-    proc->next = global_q.first;
+        proc->next = NULL;
+    } else {
+        proc->next = global_q.first;
+    }
     global_q.first = proc;
 }
 
@@ -161,9 +165,8 @@ int main(int argc, char **argv)
         if (input == NULL) err_exit("invalid input file name");
     } 
 
-    /* Read input file */
+
     while (fgets(exec, sizeof(exec), input) != NULL) {
-        // Remove newline character if present
         exec[strcspn(exec, "\n")] = 0;
         if (strlen(exec) == 0) {
             continue;
@@ -174,7 +177,10 @@ int main(int argc, char **argv)
         char *token = strtok(exec, " ");
         strcpy(proc->name, token);
         token = strtok(NULL, " ");
-        proc->requested_cores = token ? atoi(token) : 1; // Διαβάζουμε τον αριθμό των πυρήνων
+        proc->requested_cores = atoi(token);
+        if(proc->requested_cores > num_cores || proc->requested_cores == 0 || token == NULL) {
+            err_exit("requested cores exceed the number of available cores");
+        }
         proc->pid = -1;
         proc->status = PROC_NEW;
         proc->t_submission = proc_gettime();
@@ -199,6 +205,7 @@ int main(int argc, char **argv)
 
     printf("WORKLOAD TIME: %.2lf secs\n", proc_gettime() - global_t);
     printf("scheduler exits\n");
+    fclose(input);
     return 0;
 }
 
@@ -218,12 +225,9 @@ void fcfs(int core_id)
             printf("Core %d: Not enough cores available for process %s\n", core_id, proc->name);
             proc->status = PROC_STOPPED;
             proc_to_rq_end(proc);
-            print_queue();
             sleep(1);
             continue;
         }
-
-        // Εκτύπωση των ανατεθέντων πυρήνων
         printf("Process %s assigned to cores: ", proc->name);
         for (int i = 0; i < proc->requested_cores; i++) {
             printf("%d ", proc->assigned_cores[i]);
@@ -231,8 +235,6 @@ void fcfs(int core_id)
         printf("\n");
         proc->status = PROC_NEW;
 
-        // Εκτύπωση της ουράς μετά την ανάθεση των πυρήνων
-        print_queue();
 
         if (proc->status == PROC_NEW) {
             proc->t_start = proc_gettime();
@@ -256,10 +258,8 @@ void fcfs(int core_id)
 				printf("\tElapsed time = %.2lf secs\n", proc->t_end-proc->t_submission);
 				printf("\tExecution time = %.2lf secs\n", proc->t_end-proc->t_start);
 				printf("\tWorkload time = %.2lf secs\n", proc->t_end-global_t);
-                // free cores for the next process
-                for (int i = 0; i < proc->requested_cores; i++) {
-                    running_proc[proc->assigned_cores[i]] = NULL;
-                }
+                cleanup_cores(proc);
+                free(proc);
             }
         } else if (proc->status == PROC_EXITED) {
             printf("Core %d: process has exited\n", core_id);
@@ -269,34 +269,60 @@ void fcfs(int core_id)
     }
 }
 
-int assign_cores(proc_t *proc)
-{
+// Add these debug functions
+void print_core_status(const char* msg) {
+    printf("\n=== Core Status: %s ===\n", msg);
+    for(int i = 0; i < num_cores; i++) {
+        printf("Core %d: %s\n", i, running_proc[i] ? running_proc[i]->name : "FREE");
+    }
+    printf("========================\n");
+}
+
+// Update assign_cores function
+int assign_cores(proc_t *proc) {
+    print_core_status("Before Assignment");
+    
     int allocated_cores = 0;
     int core_indices[MAX_CORES];
 
-    printf("Assigning cores for process %s requesting %d cores\n", proc->name, proc->requested_cores);
+    printf("Attempting to assign %d cores to %s\n", 
+           proc->requested_cores, proc->name);
 
     for (int i = 0; i < num_cores; i++) {
-        if (running_proc[i] == NULL) {
+        if (running_proc[i] == NULL && allocated_cores < proc->requested_cores) {
             core_indices[allocated_cores] = i;
             allocated_cores++;
-            if (allocated_cores == proc->requested_cores) {
-                break;
-            }
         }
     }
 
     if (allocated_cores < proc->requested_cores) {
-        printf("Not enough cores available for process %s\n", proc->name);
-        return 0; // it can not go yet
+        printf("Failed to assign cores: needed %d, found %d\n", 
+               proc->requested_cores, allocated_cores);
+        return 0;
     }
 
-    // Ανάθεση των πυρήνων στη διεργασία
     for (int i = 0; i < proc->requested_cores; i++) {
         proc->assigned_cores[i] = core_indices[i];
         running_proc[core_indices[i]] = proc;
-        printf("Assigned core %d to process %s\n", core_indices[i], proc->name);
+        printf("Core %d assigned to %s\n", core_indices[i], proc->name);
     }
 
-    return 1; 
+    print_core_status("After Assignment");
+    return 1;
+}
+
+// In fcfs function, add after process completion:
+void cleanup_cores(proc_t *proc) {
+    print_core_status("Before Cleanup");
+    printf("Cleaning up cores for process %s\n", proc->name);
+    
+    for (int i = 0; i < proc->requested_cores; i++) {
+        int core = proc->assigned_cores[i];
+        if (core >= 0 && core < num_cores) {
+            running_proc[core] = NULL;
+            printf("Released core %d\n", core);
+        }
+    }
+    
+    print_core_status("After Cleanup");
 }
