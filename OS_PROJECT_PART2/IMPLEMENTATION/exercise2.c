@@ -16,7 +16,8 @@
 #define MAX_LINE_LENGTH 80
 #define MAX_CORES 5
 
-void fcfs(int core_id);
+
+
 
 #define PROC_NEW    0
 #define PROC_STOPPED    1
@@ -34,6 +35,8 @@ typedef struct proc_desc {
 } proc_t;
 
 int assign_cores(proc_t *proc);
+void fcfs(int core_id);
+void cleanup_cores(proc_t *proc);
 
 struct single_queue {
     proc_t    *first;
@@ -211,7 +214,6 @@ int main(int argc, char **argv)
 
 void fcfs(int core_id)
 {
-    struct sigaction sig_act;
     proc_t *proc;
     int pid;
     int status;
