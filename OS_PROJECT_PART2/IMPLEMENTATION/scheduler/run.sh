@@ -1,0 +1,1 @@
+./exercise1 4 FCFS order_of_exec.txt
