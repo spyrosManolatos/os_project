@@ -12,3 +12,7 @@ exercise2: exercise2.c
 
 clean:
 	rm -f exercise1 exercise2
+	rm -f fcfs_with4cores_3processes.txt
+	rm -f rr_with4cores_3processes.txt
+	rm -f fcfs_with2cores_eachcoreassigned.txt
+	rm -f rrff_with4cores_3processes.txt

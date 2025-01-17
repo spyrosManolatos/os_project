@@ -115,9 +115,8 @@ double proc_gettime()
     gettimeofday(&tv, 0);
     return (double) (tv.tv_sec+tv.tv_usec/1000000.0);
 }
-#define RR        1
 #define FCFS    2
-#define RRFF   3
+
 int policy;
 int quantum = 100;    /* ms */
 proc_t *running_proc[MAX_CORES];
