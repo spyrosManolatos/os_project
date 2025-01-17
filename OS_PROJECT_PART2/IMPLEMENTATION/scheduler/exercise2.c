@@ -57,12 +57,12 @@ void proc_queue_init (register struct single_queue * q)
 void proc_to_rq (register proc_t *proc)
 {
     if (proc_queue_empty (&global_q)) {
-        global_q.last = proc;
+        global_q.first = global_q.last = proc;
         proc->next = NULL;
     } else {
         proc->next = global_q.first;
+        global_q.first = proc;
     }
-    global_q.first = proc;
 }
 
 void proc_to_rq_end (register proc_t *proc)
@@ -203,7 +203,7 @@ int main(int argc, char **argv)
         pthread_join(cores[i], NULL);
     }
 
-    print_queue(); // Εκτύπωση της ουράς μετά την ανάθεση των πυρήνων
+    print_queue(); 
 
     printf("WORKLOAD TIME: %.2lf secs\n", proc_gettime() - global_t);
     printf("scheduler exits\n");
@@ -221,11 +221,10 @@ void fcfs(int core_id)
 
         printf("Core %d: Dequeue process with name %s and pid %d\n", core_id, proc->name, proc->pid);
 
-        // Ανάθεση πυρήνων στη διεργασία
         if (!assign_cores(proc)) {
             printf("Core %d: Not enough cores available for process %s\n", core_id, proc->name);
             proc->status = PROC_STOPPED;
-            proc_to_rq_end(proc);
+            proc_to_rq(proc);
             sleep(1);
             continue;
         }
