@@ -269,7 +269,7 @@ void fcfs(int core_id)
     }
 }
 
-// Add these debug functions
+
 void print_core_status(const char* msg) {
     printf("\n=== Core Status: %s ===\n", msg);
     for(int i = 0; i < num_cores; i++) {
@@ -278,7 +278,7 @@ void print_core_status(const char* msg) {
     printf("========================\n");
 }
 
-// Update assign_cores function
+
 int assign_cores(proc_t *proc) {
     print_core_status("Before Assignment");
     
@@ -311,7 +311,6 @@ int assign_cores(proc_t *proc) {
     return 1;
 }
 
-// In fcfs function, add after process completion:
 void cleanup_cores(proc_t *proc) {
     print_core_status("Before Cleanup");
     printf("Cleaning up cores for process %s\n", proc->name);
