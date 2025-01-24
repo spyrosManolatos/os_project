@@ -1,75 +1,86 @@
+#include <fcntl.h> // For O_CREAT and O_EXCL
+#include <semaphore.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <sys/wait.h>
 #include <sys/types.h>
-#include <semaphore.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include "ipc_utils.h"
 
-sem_t ready;
-sem_t boats;
-sem_t capacity;
-sem_t ready;
-int current_lifeboat = 0;
+#define SEM_READY "/sem_ready"
+#define SEM_BOATS "/sem_boats"
+#define SEM_CAPACITY "/sem_capacity"
+#define SEM_PASS_BOARDED "/sem_pass_boarded"
 
-void init_semaphores(int n_capacity, int n_lboats) {
-    sem_init(&capacity, 0, n_capacity);
-    sem_init(&boats, 0, n_lboats);
-    sem_init(&ready, 0,0);
-    sem_init(&ready, 0, 1);
+int current_lifeboat = 2;
+int passengers_boarded = 0;
+int n_passengers = 30;
+int n_boats = 5;
+int n_capacity = 4;
+
+sem_t *ready;
+sem_t *boats;
+sem_t *capacity;
+sem_t *pass_boarded;
+
+void cleanup_semaphores() {
+  sem_close(ready);
+  sem_close(boats);
+  sem_close(capacity);
+  sem_close(pass_boarded);
+
+  sem_unlink(SEM_READY);
+  sem_unlink(SEM_BOATS);
+  sem_unlink(SEM_CAPACITY);
+  sem_unlink(SEM_PASS_BOARDED);
 }
-
 
 void passenger_process(int id) {
-    sem_wait(&boats);
-    int lifeboat_id = current_lifeboat;
-    printf("Passenger %d is boarding a lifeboat  %d.\n", id, lifeboat_id);
-    sem_wait(&capacity);
-    printf("Passenger %d has boarded a lifeboat  %d.\n", id, lifeboat_id);
-    if(sem_getvalue(&capacity,NULL) == 0){
-        sem_post(&ready);
-    }
-}
-
-void lifeboat_process(int id) {
-    printf("Lifeboat %d is waiting for passengers.\n", id);
-    current_lifeboat = id;
-    sem_wait(&ready);
-    printf("Lifeboat %d has boarded passengers.\n", id);
-    printf("Lifeboat %d returned from coast.\n", id);
-    for (int i = 0; i < sem_getvalue(&capacity, NULL); i++) {
-        sem_post(&capacity);
-    }
-    sem_post(&boats);
+    sem_wait(ready);
+    printf("Passenger %d boarded\n", id);
+    sem_post(pass_boarded);
+    exit(0);
 }
 
 int main() {
+    setvbuf(stdout, NULL, _IONBF, 0);
+  pid_t pid;
+  init_semaphores(n_capacity, n_boats);
 
-    int n_passengers;
-    int n_boats;
-    int n_capacity;
+  for (int i = 0; i < n_passengers; i++) {
+    pid = fork();
+    if (pid == 0) {
+      passenger_process(i);
+    }
+  }
 
-    // Take input values
-    printf("Enter the number of passengers: ");
-    scanf("%d", &n_passengers);
-    printf("Enter the number of lifeboats: ");
-    scanf("%d", &n_boats);
-    printf("Enter the capacity of each lifeboat: ");
-    scanf("%d", &n_capacity);
-
-    // Initialize semaphores
-    init_semaphores(n_capacity, n_boats);
-
-    // Create lifeboat processes
-    for(int i = 0; i < n_boats; i++){
-         if(fork() == 0) {
-            lifeboat_process(i);
+  if (pid != 0) {
+    // Parent process: Manage lifeboats and passengers
+    while (passengers_boarded < n_passengers) 
+    {
+        for (int boat_index = 0; boat_index < n_boats; boat_index++) 
+        {  
+            for (int capacity_index = 0; capacity_index < n_capacity; capacity_index++) 
+            {
+                int val;
+                printf("Boat %d boarded passenger\n", boat_index);
+                sem_post(ready);  
+                sem_getvalue(ready, &val);
+                printf("%d\n", val);
+                sem_wait(pass_boarded); // Wait for the passenger to board
+                passengers_boarded++;
+            }
+        printf("Boat %d finished boarding and is leaving\n", boat_index);
         }
     }
-      // Create passenger processes
-    for(int i = 0; i < n_passengers; i++){
-         if(fork() == 0) {
-            passenger_process(i);
-        }
+
+    // Wait for all child processes to finish
+    for (int i = 0; i < n_passengers; i++) {
+      wait(NULL);
     }
+
+    cleanup_semaphores();
+    printf("All passengers have boarded lifeboats.\n");
     return 0;
+  }
 }

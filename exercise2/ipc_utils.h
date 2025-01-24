@@ -1,18 +1,24 @@
-// ipc_utils.h
 #include <semaphore.h>
 #include <pthread.h>
 
-// Semaphores
-sem_t boat_semaphore; // Limits the number of passengers per boat
-sem_t boarding_queue_semaphore; // Ensures orderly boarding
+sem_t boat_semaphore;
+sem_t boarding_queue_semaphore;
 
-// Utility functions
-void init_semaphores(int boat_capacity) {
-    sem_init(&boat_semaphore, 0, boat_capacity);
-    sem_init(&boarding_queue_semaphore, 0, 1); // Mutex-like semaphore
+void init_semaphores(int n_capacity, int n_lboats) {
+  ready = sem_open(SEM_READY, O_CREAT, 0644, 0);
+  boats = sem_open(SEM_BOATS, O_CREAT, 0644, n_lboats);
+  capacity = sem_open(SEM_CAPACITY, O_CREAT, 0644, n_capacity);
+  pass_boarded = sem_open(SEM_PASS_BOARDED, O_CREAT, 0644, 0);
 }
 
 void destroy_semaphores() {
-    sem_destroy(&boat_semaphore);
-    sem_destroy(&boarding_queue_semaphore);
+  sem_close(ready);
+  sem_close(boats);
+  sem_close(capacity);
+  sem_close(pass_boarded);
+
+  sem_unlink(SEM_READY);
+  sem_unlink(SEM_BOATS);
+  sem_unlink(SEM_CAPACITY);
+  sem_unlink(SEM_PASS_BOARDED);
 }
