@@ -56,7 +56,6 @@ int find_memory(int memory_needed) {
 void allocate_memory(int process_index, int block_index) {
     int memory_needed = processes[process_index].memory_needed;
     MemoryBlock *block = &memory[block_index];
-
     block->free = false;
     block->pid = processes[process_index].pid;
 
@@ -123,7 +122,10 @@ void round_robin() {
             if (processes[i].remaining_time <= 0) {
                 continue;
             }
-
+            if(processes[i].memory_needed > MEMORY_SIZE){
+                printf("Process %d requires more memory than available. Process not executed.\n", processes[i].pid);
+                exit(1);
+            }
             if (processes[i].arrival_time <= current_time) {
                 if (!processes[i].in_memory) {
                     int block_index = find_memory(processes[i].memory_needed);
