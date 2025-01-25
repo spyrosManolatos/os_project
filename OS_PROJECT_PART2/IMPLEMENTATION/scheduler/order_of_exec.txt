@@ -1,6 +1,6 @@
-../work/work1 2 
+../work/work1 1 
 ../work/work2 1
-../work/work3 2
-../work/work4 2
+../work/work3 1
+../work/work4 1
 
 

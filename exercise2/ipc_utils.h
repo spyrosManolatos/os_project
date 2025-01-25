@@ -1,24 +1,33 @@
+#ifndef IPC_UTILS_H
+#define IPC_UTILS_H
+
 #include <semaphore.h>
 #include <pthread.h>
+#include <fcntl.h>
 
-sem_t boat_semaphore;
-sem_t boarding_queue_semaphore;
+#define SEM_READY "/sem_ready"
+#define SEM_BOATS "/sem_boats"
+#define SEM_CAPACITY "/sem_capacity"
+#define SEM_PASS_BOARDED "/sem_pass_boarded"
 
-void init_semaphores(int n_capacity, int n_lboats) {
-  ready = sem_open(SEM_READY, O_CREAT, 0644, 0);
-  boats = sem_open(SEM_BOATS, O_CREAT, 0644, n_lboats);
-  capacity = sem_open(SEM_CAPACITY, O_CREAT, 0644, n_capacity);
-  pass_boarded = sem_open(SEM_PASS_BOARDED, O_CREAT, 0644, 0);
+// Declare external semaphores
+extern sem_t *ready;
+extern sem_t *boats;
+extern sem_t *capacity;
+extern sem_t *pass_boarded;
+// a keyword that prevents multiple definition errors in header files
+static inline void init_semaphores(int n_capacity, int n_lboats){
+    ready = sem_open(SEM_READY, O_CREAT, 0644, 0);
+    boats = sem_open(SEM_BOATS, O_CREAT, 0644, n_lboats);
+    capacity = sem_open(SEM_CAPACITY, O_CREAT, 0644, n_capacity);
+    pass_boarded = sem_open(SEM_PASS_BOARDED, O_CREAT, 0644, 0);
+}
+void passenger_process(int id);
+static inline void destroy_semaphores(){
+    sem_close(ready);
+    sem_close(boats);
+    sem_close(capacity);
+    sem_close(pass_boarded);
 }
 
-void destroy_semaphores() {
-  sem_close(ready);
-  sem_close(boats);
-  sem_close(capacity);
-  sem_close(pass_boarded);
-
-  sem_unlink(SEM_READY);
-  sem_unlink(SEM_BOATS);
-  sem_unlink(SEM_CAPACITY);
-  sem_unlink(SEM_PASS_BOARDED);
-}
+#endif
