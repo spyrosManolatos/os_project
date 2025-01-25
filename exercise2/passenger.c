@@ -1,3 +1,9 @@
+///////////////////////////////////
+// Manolatos Spyridon, 1104802
+// Maroudas Andreas-Erikos, 1100617
+// Kirkinis Manousos, 1100590
+// Chrysanthakopoulos Nikolaos, 1100760
+////////////////////////////////////
 #include "ipc_utils.h"
 #include <stdio.h>
 #include <stdlib.h>

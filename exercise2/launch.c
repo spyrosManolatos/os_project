@@ -1,3 +1,9 @@
+///////////////////////////////////
+// Manolatos Spyridon, 1104802
+// Maroudas Andreas-Erikos, 1100617
+// Kirkinis Manousos, 1100590
+// Chrysanthakopoulos Nikolaos, 1100760
+////////////////////////////////////
 #include <fcntl.h> // For O_CREAT and O_EXCL
 #include <semaphore.h>
 #include <stdio.h>
@@ -18,26 +24,6 @@ sem_t *boats;
 sem_t *capacity;
 sem_t *pass_boarded;
 
-// void init_semaphores(int n_capacity, int n_lboats)
-// {
-//   ready = sem_open(SEM_READY, O_CREAT, 0644, 0);
-//   boats = sem_open(SEM_BOATS, O_CREAT, 0644, n_lboats);
-//   capacity = sem_open(SEM_CAPACITY, O_CREAT, 0644, n_capacity);
-//   pass_boarded = sem_open(SEM_PASS_BOARDED, O_CREAT, 0644, 0);
-// }
-
-// void destroy_semaphores()
-// {
-//   sem_close(ready);
-//   sem_close(boats);
-//   sem_close(capacity);
-//   sem_close(pass_boarded);
-
-//   sem_unlink(SEM_READY);
-//   sem_unlink(SEM_BOATS);
-//   sem_unlink(SEM_CAPACITY);
-//   sem_unlink(SEM_PASS_BOARDED);
-// }
 int main()
 {
   setvbuf(stdout, NULL, _IONBF, 0);
