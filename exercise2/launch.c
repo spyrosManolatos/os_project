@@ -26,7 +26,7 @@ sem_t *pass_boarded;
 
 int main()
 {
-  setvbuf(stdout, NULL, _IONBF, 0);
+  
   pid_t pid;
   init_semaphores(n_capacity, n_boats);
 
@@ -48,7 +48,7 @@ int main()
         int boat_passengers = 0;
         printf("\nBoat %d is loading passengers\n", boat);
 
-        // Load up to capacity or remaining passengers
+        
         while (boat_passengers < n_capacity && passengers_boarded < n_passengers)
         {
           sem_post(ready);
@@ -62,7 +62,7 @@ int main()
       }
     }
 
-    // Wait for all child processes to finish
+    
     for (int i = 0; i < n_passengers; i++)
     {
       wait(NULL);

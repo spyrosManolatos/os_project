@@ -60,16 +60,10 @@ void allocate_memory(int process_index, int block_index) {
     block->pid = processes[process_index].pid;
 
     if (block->size > memory_needed) {
-        MemoryBlock new_block = {
-            .start = block->start + memory_needed,
-            .size = block->size - memory_needed,
-            .free = true,
-            .pid = -1
-        };
-        for (int j = MEMORY_SIZE - 1; j > block_index; j--) {
-            memory[j] = memory[j - 1];
-        }
-        memory[block_index + 1] = new_block;
+        memory[block_index + 1].start = block->start + memory_needed;
+        memory[block_index + 1].size = block->size - memory_needed;
+        memory[block_index + 1].free = true;
+        memory[block_index + 1].pid = -1;
     }
 
     block->size = memory_needed;
@@ -137,7 +131,12 @@ void round_robin() {
                     }
                 }
 
-                int execution_time = (processes[i].remaining_time < TIME_QUANTUM) ? processes[i].remaining_time : TIME_QUANTUM;
+                int execution_time;
+                if (processes[i].remaining_time < TIME_QUANTUM) {
+                    execution_time = processes[i].remaining_time;
+                } else {
+                    execution_time = TIME_QUANTUM;
+                }
                 processes[i].remaining_time -= execution_time;
                 current_time += execution_time;
                 progress_made = true;
